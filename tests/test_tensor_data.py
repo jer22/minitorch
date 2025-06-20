@@ -108,6 +108,9 @@ def test_shape_broadcast() -> None:
     c = minitorch.shape_broadcast((5, 1, 5, 1), (1, 5, 1, 5))
     assert c == (5, 5, 5, 5)
 
+    c = minitorch.shape_broadcast((5, 1, 4, 1), (1, 3, 1, 5))
+    assert c == (5, 3, 4, 5)
+
     with pytest.raises(minitorch.IndexingError):
         c = minitorch.shape_broadcast((5, 7, 5, 1), (1, 5, 1, 5))
         print(c)

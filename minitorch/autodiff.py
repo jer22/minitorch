@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Iterable, List, Tuple, Dict
 
 from typing_extensions import Protocol
 
@@ -23,7 +23,13 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
     # TODO: Implement for Task 1.1.
-    raise NotImplementedError('Need to implement for Task 1.1')
+    arg_list = list(vals)
+    temp = arg_list[arg]
+    arg_list[arg] = temp + epsilon
+    f1 = f(*arg_list)
+    arg_list[arg] = temp - epsilon
+    f2 = f(*arg_list)
+    return (f1 - f2) / (2 * epsilon)
 
 
 variable_count = 1
@@ -62,7 +68,18 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         Non-constant Variables in topological order starting from the right.
     """
     # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    result: List[Variable] = [variable]
+    exist: Dict[int, bool] = {}
+    exist[variable.unique_id] = True
+    idx = 0
+    while idx < len(result):
+        val = result[idx]
+        for parent in val.parents:
+            if not parent.is_constant() and parent.unique_id not in exist:
+                exist[parent.unique_id] = True
+                result.append(parent)
+        idx += 1
+    return result
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -77,7 +94,18 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
     # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    tape: Iterable[Variable] = topological_sort(variable)
+    current_deriv: Dict[int, float] = {}
+    current_deriv[variable.unique_id] = deriv
+    for val in tape:
+        if val.is_leaf():
+            val.accumulate_derivative(current_deriv[val.unique_id])
+        else:
+            for input, local_deriv in val.chain_rule(current_deriv[val.unique_id]):
+                if input.unique_id in current_deriv:
+                    current_deriv[input.unique_id] += local_deriv
+                else:
+                    current_deriv[input.unique_id] = local_deriv
 
 
 @dataclass
